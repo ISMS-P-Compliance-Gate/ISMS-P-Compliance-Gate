@@ -13,8 +13,11 @@ import traceback
 from abc import ABC, abstractmethod
 
 import requests
+from dotenv import load_dotenv
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+sys.path.insert(0, REPO_ROOT)
+load_dotenv(os.path.join(REPO_ROOT, ".env"))  # 로컬 실행 시 .env를 환경변수로 로드 (CI에는 .env가 없어 조용히 무시됨)
 from lib.mapping import to_isms_result  # noqa: E402
 
 OWNER = "서윤"

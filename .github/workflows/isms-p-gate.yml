@@ -64,6 +64,11 @@ jobs:
       - name: "[강서윤] seoyun_pipeline 점검 실행"
         env:
           GITHUB_TOKEN: ${{ env.ISMS_TOKEN }}
+          # 2.8.2(SonarQube)용. SONAR_PROJECT_KEY/SONAR_TOKEN은 리포 Settings > Secrets and
+          # variables > Actions에 등록 필요. 등록 전까지는 2.8.2가 ERROR로 남는다(정상 동작).
+          SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           shopt -s nullglob
           for f in scanners/seoyun_pipeline/check_*.py; do
