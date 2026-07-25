@@ -7,12 +7,38 @@ import os
 
 import requests
 
-from base import ISMSRule, finding
+from base import DEFAULT_TIMEOUT, ISMSRule, finding
 
 SONAR_HOST_URL = os.getenv("SONAR_HOST_URL", "").rstrip("/")
 SONAR_PROJECT_KEY = os.getenv("SONAR_PROJECT_KEY", "")
 SONAR_TOKEN = os.getenv("SONAR_TOKEN", "")
 COVERAGE_THRESHOLD = float(os.getenv("SONAR_COVERAGE_THRESHOLD", "60"))
+
+
+def _iter_unresolved_issues(session: requests.Session):
+    """BLOCKER/CRITICAL 미해결 취약점을 SonarQube 페이지네이션(p/ps/paging.total)을 따라가며 전부 yield."""
+    page = 1
+    page_size = 100
+    while True:
+        resp = session.get(
+            f"{SONAR_HOST_URL}/api/issues/search",
+            params={
+                "componentKeys": SONAR_PROJECT_KEY,
+                "severities": "BLOCKER,CRITICAL",
+                "types": "VULNERABILITY",
+                "resolved": "false",
+                "ps": page_size,
+                "p": page,
+            },
+            timeout=DEFAULT_TIMEOUT,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        yield from data.get("issues", [])
+        paging = data.get("paging", {"total": 0, "pageIndex": page, "pageSize": page_size})
+        if paging["pageIndex"] * paging["pageSize"] >= paging["total"]:
+            break
+        page += 1
 
 
 def sonar_session() -> requests.Session:
@@ -44,6 +70,7 @@ class SecurityRequirementsTestRule(ISMSRule):
         gate_resp = session.get(
             f"{SONAR_HOST_URL}/api/qualitygates/project_status",
             params={"projectKey": SONAR_PROJECT_KEY},
+            timeout=DEFAULT_TIMEOUT,
         )
         if gate_resp.status_code == 404:
             return {
@@ -63,18 +90,7 @@ class SecurityRequirementsTestRule(ISMSRule):
                 severity="HIGH",
             ))
 
-        issues_resp = session.get(
-            f"{SONAR_HOST_URL}/api/issues/search",
-            params={
-                "componentKeys": SONAR_PROJECT_KEY,
-                "severities": "BLOCKER,CRITICAL",
-                "types": "VULNERABILITY",
-                "resolved": "false",
-                "ps": 100,
-            },
-        )
-        issues_resp.raise_for_status()
-        for issue in issues_resp.json().get("issues", []):
+        for issue in _iter_unresolved_issues(session):
             component = issue.get("component", "")
             file_path = component.split(":", 1)[1] if ":" in component else component
             hard_findings.append(finding(
@@ -87,6 +103,7 @@ class SecurityRequirementsTestRule(ISMSRule):
         measures_resp = session.get(
             f"{SONAR_HOST_URL}/api/measures/component",
             params={"component": SONAR_PROJECT_KEY, "metricKeys": "coverage"},
+            timeout=DEFAULT_TIMEOUT,
         )
         measures_resp.raise_for_status()
         measures = {

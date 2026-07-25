@@ -8,6 +8,7 @@
 """
 import os
 import sys
+import time
 import traceback
 from abc import ABC, abstractmethod
 
@@ -18,6 +19,8 @@ from lib.mapping import to_isms_result  # noqa: E402
 
 OWNER = "서윤"
 GITHUB_API = "https://api.github.com"
+DEFAULT_TIMEOUT = 10  # seconds, 모든 외부 API 호출 공통 타임아웃
+RATE_LIMIT_MAX_RETRIES = 3
 
 
 def finding(message: str, severity: str = "MEDIUM", file: str | None = None, line: int | None = None) -> dict:
@@ -54,10 +57,37 @@ def org_name() -> str:
     return org
 
 
+def _is_rate_limited(resp: requests.Response) -> bool:
+    return resp.status_code == 403 and resp.headers.get("X-RateLimit-Remaining") == "0"
+
+
+def _rate_limit_wait_seconds(resp: requests.Response) -> float:
+    retry_after = resp.headers.get("Retry-After")
+    if retry_after:
+        return float(retry_after)
+    reset_at = resp.headers.get("X-RateLimit-Reset")
+    if reset_at:
+        return max(float(reset_at) - time.time(), 1.0)
+    return 5.0
+
+
+def request_with_retry(session: requests.Session, method: str, url: str, **kwargs) -> requests.Response:
+    """timeout을 기본 적용하고, GitHub rate limit(403 + X-RateLimit-Remaining=0)에 걸리면
+    리셋 시각까지 대기 후 재시도한다."""
+    kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
+    resp = session.request(method, url, **kwargs)
+    for _ in range(RATE_LIMIT_MAX_RETRIES):
+        if not _is_rate_limited(resp):
+            break
+        time.sleep(_rate_limit_wait_seconds(resp))
+        resp = session.request(method, url, **kwargs)
+    return resp
+
+
 def paginate(session: requests.Session, url: str, params: dict | None = None):
     """GitHub REST API의 Link 헤더 기반 페이지네이션을 순회하며 item을 하나씩 yield."""
     while url:
-        resp = session.get(url, params=params)
+        resp = request_with_retry(session, "GET", url, params=params)
         resp.raise_for_status()
         yield from resp.json()
         url = resp.links.get("next", {}).get("url")

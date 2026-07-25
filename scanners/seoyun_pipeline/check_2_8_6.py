@@ -5,7 +5,7 @@ production environment에 배포 승인(required reviewers) 규칙이 걸려있�
 """
 import os
 
-from base import GITHUB_API, ISMSRule, finding, github_session, paginate, repo_full_name
+from base import GITHUB_API, ISMSRule, finding, github_session, paginate, repo_full_name, request_with_retry
 
 PROD_ENV_NAME = os.getenv("PROD_ENV_NAME", "production")
 
@@ -23,7 +23,7 @@ class ProductionDeploymentRule(ISMSRule):
         hard_findings = []
         soft_findings = []
 
-        env_resp = session.get(f"{GITHUB_API}/repos/{repo}/environments/{PROD_ENV_NAME}")
+        env_resp = request_with_retry(session, "GET", f"{GITHUB_API}/repos/{repo}/environments/{PROD_ENV_NAME}")
         if env_resp.status_code == 404:
             hard_findings.append(finding(
                 f"'{PROD_ENV_NAME}' environment가 정의되어 있지 않습니다. "
@@ -54,7 +54,8 @@ class ProductionDeploymentRule(ISMSRule):
             ))
         else:
             for dep in deployments[:20]:
-                status_resp = session.get(
+                status_resp = request_with_retry(
+                    session, "GET",
                     f"{GITHUB_API}/repos/{repo}/deployments/{dep['id']}/statuses",
                     params={"per_page": 1},
                 )
