@@ -5,7 +5,7 @@ main 브랜치가 브랜치 보호 규칙(리뷰 승인, 강제 push 금지, 관
 """
 import os
 
-from base import GITHUB_API, ISMSRule, finding, github_session, repo_full_name
+from base import GITHUB_API, ISMSRule, finding, github_session, repo_full_name, request_with_retry
 
 
 class SourceProgramManagementRule(ISMSRule):
@@ -22,7 +22,7 @@ class SourceProgramManagementRule(ISMSRule):
         session = github_session()
         repo = repo_full_name()
         url = f"{GITHUB_API}/repos/{repo}/branches/{self.branch}/protection"
-        resp = session.get(url)
+        resp = request_with_retry(session, "GET", url)
 
         if resp.status_code == 404:
             return {
