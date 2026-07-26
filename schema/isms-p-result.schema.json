@@ -12,7 +12,6 @@
     "run_id": { "type": "string" },
     "control_id": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
     "control_name": { "type": "string" },
-    # 3가지 등급을 강제하는 필드
     "category": { "type": "string", "enum": ["auto", "semi-auto", "checklist"] },
     "status": { "type": "string", "enum": ["PASS", "FAIL", "NOT_APPLICABLE", "MANUAL_REQUIRED", "ERROR"] },
     "tool": { "type": "string" },
