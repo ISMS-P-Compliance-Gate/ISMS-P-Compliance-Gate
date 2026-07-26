@@ -1,3 +1,7 @@
 requests
 jsonschema
 python-dotenv
+
+presidio-analyzer
+spacy
+phonenumbers
