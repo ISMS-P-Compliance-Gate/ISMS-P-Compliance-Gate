@@ -87,12 +87,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ env.ISMS_TOKEN }}
         run: |
-          # 2.7.1 (testssl.sh) 실행에 필요한 도구 설치
+          # ---- 2.7.1 (testssl.sh) 준비 ----
           sudo apt-get update -y
           sudo apt-get install -y dnsutils bsdmainutils
           if [ ! -f "./testssl.sh/testssl.sh" ]; then
             git clone --depth 1 https://github.com/drwetter/testssl.sh.git ./testssl.sh
           fi
+
+          # ---- 2.8.4 (Presidio) 준비 ----
+          python -m spacy download en_core_web_lg
 
           shopt -s nullglob
           for f in scanners/hyemin_scanner/check_*.py; do
