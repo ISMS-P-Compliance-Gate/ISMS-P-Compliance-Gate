@@ -22,10 +22,9 @@ testssl.sh 를 이용해 지정한 대상(도메인:포트)의
   testssl.sh 원본 증적은 results/2_7_1/evidence/ 에 자동 저장됨.
 
 사용법 (GitHub Actions 등 CI):
-  python3 check_2_7_1.py --target expired.badssl.com:443 \
-      --testssl-path /tmp/testssl.sh/testssl.sh
-  (run_id / pr_number / commit_sha는 GITHUB_RUN_ID, GITHUB_SHA, GITHUB_EVENT_NUMBER
-   환경변수에서 자동으로 채워짐 -> 인자로 안 넘겨도 됨)
+  scanners/hyemin_scanner/check_*.py 패턴으로 인자 없이 `python "$f"` 형태로 실행됨.
+  --target을 안 줘도 TLS_SCAN_TARGET 환경변수 -> 그것도 없으면 데모 기본값(expired.badssl.com:443)으로 동작.
+  run_id / pr_number / commit_sha 는 GITHUB_RUN_ID, PR_NUMBER, GITHUB_SHA 환경변수에서 자동으로 채워짐.
 """
 
 import argparse
@@ -291,18 +290,32 @@ def timestamp_for_filename(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H-%M-%SZ")
 
 
+# 이 레포의 CI(isms-p-gate.yml)는 scanners/hyemin_scanner/check_*.py 를
+# 인자 없이 `python "$f"` 형태로 그대로 실행하므로, --target이 필수(required)면 CI에서 바로 실패한다.
+# 그래서 인자를 안 주면 TLS_SCAN_TARGET 환경변수 -> 그것도 없으면 데모용 기본 대상을 쓰도록 한다.
+DEFAULT_TARGET = "expired.badssl.com:443"
+
+
+def default_target() -> str:
+    return os.environ.get("TLS_SCAN_TARGET") or DEFAULT_TARGET
+
+
 # ------------------------------------------------------------------
 # main
 # ------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description="ISMS-P 2.7.1 전송구간 암호정책 자동 점검")
-    parser.add_argument("--target", required=True, help="점검 대상 (예: expired.badssl.com:443)")
+    parser.add_argument(
+        "--target",
+        default=None,
+        help="점검 대상 (예: expired.badssl.com:443). 미지정시 TLS_SCAN_TARGET 환경변수, 그것도 없으면 데모 기본값 사용",
+    )
     parser.add_argument(
         "--testssl-path",
         default=None,
         help="testssl.sh 스크립트 경로 (미지정시 ./testssl.sh/testssl.sh 등 흔한 위치를 자동 탐색)",
     )
-    parser.add_argument("--owner", default=os.environ.get("CONTROL_OWNER", "미지정"), help="점검 담당자")
+    parser.add_argument("--owner", default=os.environ.get("CONTROL_OWNER", "혜민"), help="점검 담당자")
     parser.add_argument("--run-id", default=None, help="실행 ID (미지정시 GITHUB_RUN_ID 또는 uuid)")
     parser.add_argument("--pr-number", type=int, default=None, help="PR 번호 (미지정시 GITHUB_EVENT_NUMBER)")
     parser.add_argument("--commit-sha", default=None, help="커밋 SHA (미지정시 GITHUB_SHA)")
@@ -322,6 +335,7 @@ def main():
         help="testssl.sh 원본(raw) 결과 저장 폴더 (미지정시 results/2_7_1/evidence)",
     )
     args = parser.parse_args()
+    target = args.target or default_target()
 
     now = datetime.now(timezone.utc)
     folder = control_folder_name()  # "2_7_1"
@@ -346,11 +360,11 @@ def main():
 
     testssl_path = resolve_testssl_path(args.testssl_path)
 
-    safe_target_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", args.target)
+    safe_target_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", target)
     evidence_path = evidence_dir / f"testssl_{safe_target_name}_{run_id}.json"
 
     # 1) testssl.sh 실행 -> 원본(raw) 증적 JSON 저장
-    run_testssl(testssl_path, args.target, evidence_path)
+    run_testssl(testssl_path, target, evidence_path)
     raw_findings = load_raw_findings(evidence_path)
 
     # 2) 세 가지 세부 항목 판정 -> findings 배열로 변환
@@ -376,7 +390,7 @@ def main():
         "timestamp": now.isoformat().replace("+00:00", "Z"),
         "pr_number": pr_number,
         "commit_sha": commit_sha,
-        "scope": args.target,
+        "scope": target,
         "findings": findings,
         "evidence_path": str(evidence_path),
     }
