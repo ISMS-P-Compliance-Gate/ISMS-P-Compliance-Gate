@@ -5,3 +5,7 @@ python-dotenv
 presidio-analyzer
 spacy
 phonenumbers
+
+google-generativeai>=0.8.0
+PyYAML>=6.0
+requests>=2.31.0
