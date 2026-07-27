@@ -1,0 +1,16 @@
+performance:
+  cpu_percent_warning: 70
+  cpu_percent_critical: 80
+  memory_percent_warning: 75
+  memory_percent_critical: 85
+  disk_percent_warning: 80
+  disk_percent_critical: 90
+
+backup:
+  max_days_without_backup: 7
+
+log_retention:
+  min_days: 180
+
+antivirus:
+  max_definition_age_days: 7
