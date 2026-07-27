@@ -25,6 +25,7 @@ def check_2_5_5():
         control_id="2.5.5",
         control_name="특수 계정 및 권한 관리",
         status=status,
+        method="semi-auto",
         tool="AWS IAM API",
         findings={"message": message}
     )
