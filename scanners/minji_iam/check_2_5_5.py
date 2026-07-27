@@ -23,8 +23,7 @@ def check_2_5_5():
         control_name="특수 계정 및 권한 관리",
         status=status,
         tool="AWS IAM API",
-        findings={"message": message},
-        evidence_path="results/2_5_5/result.json"
+        findings={"message": message}
     )
     return result
 
