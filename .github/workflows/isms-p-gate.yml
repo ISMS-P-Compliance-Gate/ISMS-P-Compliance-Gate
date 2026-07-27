@@ -87,6 +87,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ env.ISMS_TOKEN }}
         run: |
+          # ---- 2.7.1 (testssl.sh) 준비 ----
+          sudo apt-get update -y
+          sudo apt-get install -y dnsutils bsdmainutils
+          if [ ! -f "./testssl.sh/testssl.sh" ]; then
+            git clone --depth 1 https://github.com/drwetter/testssl.sh.git ./testssl.sh
+          fi
+
+          # ---- 2.8.4 (Presidio) 준비 ----
+          python -m spacy download en_core_web_lg
+
           shopt -s nullglob
           for f in scanners/hyemin_scanner/check_*.py; do
             echo "::group::$f"
@@ -162,8 +172,18 @@ jobs:
       # scripts/post_pr_comment.py를 혜민님이 작성 예정. 파일이 생기기 전까지는
       # 이 스텝을 주석 해제하지 마세요.
       # =====================================================================
-      # - name: "[혜민] Post PR comment"
-      #   if: github.event_name == 'pull_request'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: python scripts/post_pr_comment.py
+      - name: "[혜민] Post PR comment"
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/post_pr_comment.py
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run ISMS-P remediation comment generation
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-2.0-flash   # 선택, 없으면 코드 기본값 사용
+        run: python lib/remediation.py
