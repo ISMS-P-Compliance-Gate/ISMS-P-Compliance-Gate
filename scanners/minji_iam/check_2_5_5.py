@@ -21,7 +21,7 @@ def check_2_5_5():
     result = to_isms_result(
         run_id="run_latest",
         category="IAM",
-        owner="minji",
+        owner="민지",
         control_id="2.5.5",
         control_name="특수 계정 및 권한 관리",
         status=status,
