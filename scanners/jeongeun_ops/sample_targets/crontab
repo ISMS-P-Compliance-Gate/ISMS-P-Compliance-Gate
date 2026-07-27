@@ -1,0 +1,8 @@
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+17 * * * *   root  run-parts /etc/cron.hourly
+25 6 * * *   root  run-parts /etc/cron.daily
+47 6 * * 7   root  run-parts /etc/cron.weekly
+52 6 1 * *   root  run-parts /etc/cron.monthly
+0  3 * * *   root  find /tmp -type f -atime +7 -delete
