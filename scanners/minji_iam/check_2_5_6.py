@@ -23,6 +23,9 @@ def check_2_5_6():
         message = f"ISMS-P 2.5.6(접근권한 검토) - 감사 로그 조회 실패 ({str(e)})."
 
     result = to_isms_result(
+        run_id="run_latest",
+        category="IAM",
+        owner="minji",
         control_id="2.5.6",
         control_name="접근권한 검토",
         status=status,
