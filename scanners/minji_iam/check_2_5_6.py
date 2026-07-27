@@ -29,6 +29,7 @@ def check_2_5_6():
         control_id="2.5.6",
         control_name="접근권한 검토",
         status=status,
+        method="semi-auto",
         tool="AWS CloudTrail API",
         findings={"message": message}
     )
