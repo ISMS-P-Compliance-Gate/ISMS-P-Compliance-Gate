@@ -1,13 +1,13 @@
 import os
 import json
 import boto3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from lib.mapping import to_isms_result
 
 def check_2_5_6():
     try:
         cloudtrail = boto3.client('cloudtrail')
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=90)
         response = cloudtrail.lookup_events(
             LookupAttributes=[{'AttributeKey': 'EventSource', 'AttributeValue': 'iam.amazonaws.com'}],
@@ -27,8 +27,7 @@ def check_2_5_6():
         control_name="접근권한 검토",
         status=status,
         tool="AWS CloudTrail API",
-        findings={"message": message},
-        evidence_path="results/2_5_6/result.json"
+        findings={"message": message}
     )
     return result
 
