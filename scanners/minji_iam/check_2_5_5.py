@@ -19,6 +19,9 @@ def check_2_5_5():
         message = f"ISMS-P 2.5.5(특수 계정 및 권한 관리) - IAM API 호출 실패 ({str(e)})."
 
     result = to_isms_result(
+        run_id="run_latest",
+        category="IAM",
+        owner="minji",
         control_id="2.5.5",
         control_name="특수 계정 및 권한 관리",
         status=status,
