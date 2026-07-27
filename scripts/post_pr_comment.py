@@ -24,9 +24,6 @@ import glob
 import json
 import argparse
 
-# 이 파일은 <repo_root>/scripts/post_pr_comment.py 위치에 있는 것을 전제로 한다.
-# (로컬에서 codingtest/ 바로 밑에 두고 테스트했다면, GitHub에 올리기 전에
-#  scripts/ 폴더 안으로 옮기고 이 파일 그대로 쓰면 된다.)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib.remediation import generate_comments  # noqa: E402
@@ -72,9 +69,6 @@ def collect_latest_results() -> list:
     results/ 아래를 재귀적으로 전부 스캔해서(폴더 구조든 평평한 구조든 상관없이)
     json에 담긴 control_id별로 timestamp가 가장 최신인 결과 하나씩만 골라 반환한다.
 
-    예시로 아래 두 구조 모두 지원한다.
-      results/2_8_4/2026-07-23T20-55-51Z.json
-      results/2_8_4_result_20260723_205551.json
 
     폴더/파일명이 아니라 json 내용 안의 "control_id", "timestamp" 값을 기준으로
     판단하므로 저장 방식이 섞여 있어도 안전하게 동작한다.
@@ -100,7 +94,6 @@ def collect_latest_results() -> list:
             timestamp = item.get("timestamp", "")
             existing = latest_by_control.get(control_id)
 
-            # timestamp가 ISO 8601 형식이면 문자열 비교로도 최신순 정렬이 가능하다.
             if existing is None or timestamp >= existing[0]:
                 latest_by_control[control_id] = (timestamp, item)
 
