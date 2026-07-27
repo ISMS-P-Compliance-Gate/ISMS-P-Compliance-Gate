@@ -1,3 +1,5 @@
 requests
 jsonschema
 python-dotenv
+psutil
+pyyaml
