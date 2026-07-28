@@ -1,6 +1,7 @@
 requests
 jsonschema
 python-dotenv
+boto3
 
 presidio-analyzer
 spacy

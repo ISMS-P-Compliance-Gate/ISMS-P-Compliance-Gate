@@ -1,5 +1,8 @@
 import os
 import json
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 from lib.mapping import to_isms_result
 
 def check_2_5_4():
@@ -11,10 +14,14 @@ def check_2_5_4():
     msg = "비밀번호 최소 길이, 복잡도, 주기적 변경 정책 기준을 준수하고 있습니다."
 
     return to_isms_result(
-        item_code="2.5.4",
+        run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),
+        control_id="2.5.4",
+        control_name="비밀번호 관리",
+        category="auto",
         status=status,
+        tool="IdP API",
         owner="민지",
-        findings={"message": f"ISMS-P 2.5.4(비밀번호 관리) - {msg}"}
+        findings=[{"message": f"ISMS-P 2.5.4(비밀번호 관리) - {msg}"}]
     )
 
 if __name__ == "__main__":

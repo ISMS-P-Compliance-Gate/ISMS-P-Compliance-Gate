@@ -1,5 +1,8 @@
 import os
 import json
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 from lib.mapping import to_isms_result
 
 def check_2_5_2():
@@ -11,10 +14,14 @@ def check_2_5_2():
     msg = "IdP 내 식별되지 않은 공용/공유 계정이 존재하지 않습니다."
 
     return to_isms_result(
-        item_code="2.5.2",
+        run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),
+        control_id="2.5.2",
+        control_name="사용자 식별",
+        category="auto",
         status=status,
+        tool="IdP API (Okta/AD)",
         owner="민지",
-        findings={"message": f"ISMS-P 2.5.2(사용자 식별) - {msg}"}
+        findings=[{"message": f"ISMS-P 2.5.2(사용자 식별) - {msg}"}]
     )
 
 if __name__ == "__main__":

@@ -1,6 +1,9 @@
 import os
 import json
+import sys
+from pathlib import Path
 import requests
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 from lib.mapping import to_isms_result
 
 def check_2_2_5(org_name="", github_token=""):
@@ -27,10 +30,14 @@ def check_2_2_5(org_name="", github_token=""):
         msg = f"GitHub API 호출 중 오류 발생: {str(e)}"
 
     return to_isms_result(
-        item_code="2.2.5",
+        run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),
+        control_id="2.2.5",
+        control_name="퇴직 및 직무변경 관리",
+        category="auto",
         status=status,
+        tool="GitHub API",
         owner="민지",
-        findings={"message": f"ISMS-P 2.2.5(퇴직 및 직무변경 관리) - {msg}"}
+        findings=[{"message": f"ISMS-P 2.2.5(퇴직 및 직무변경 관리) - {msg}"}]
     )
 
 if __name__ == "__main__":

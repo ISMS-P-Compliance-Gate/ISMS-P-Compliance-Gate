@@ -1,7 +1,10 @@
 import os
 import json
+import sys
+from pathlib import Path
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 from lib.mapping import to_isms_result
 
 def check_2_5_6():
@@ -32,10 +35,14 @@ def check_2_5_6():
         msg = f"AWS IAM 접근권한 검토 중 오류 발생: {str(e)}"
 
     return to_isms_result(
-        item_code="2.5.6",
+        run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),
+        control_id="2.5.6",
+        control_name="접근권한 검토",
+        category="auto",
         status=status,
+        tool="AWS IAM API",
         owner="민지",
-        findings={"message": f"ISMS-P 2.5.6(접근권한 검토) - {msg}"}
+        findings=[{"message": f"ISMS-P 2.5.6(접근권한 검토) - {msg}"}]
     )
 
 if __name__ == "__main__":

@@ -1,7 +1,10 @@
 import os
 import json
+import sys
+from pathlib import Path
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 from lib.mapping import to_isms_result
 
 def check_2_5_5():
@@ -24,10 +27,14 @@ def check_2_5_5():
         msg = f"AWS IAM API 호출 실패: {str(e)}"
 
     return to_isms_result(
-        item_code="2.5.5",
+        run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),
+        control_id="2.5.5",
+        control_name="특수 계정 및 권한 관리",
+        category="auto",
         status=status,
+        tool="AWS IAM API",
         owner="민지",
-        findings={"message": f"ISMS-P 2.5.5(특수 계정 및 권한 관리) - {msg}"}
+        findings=[{"message": f"ISMS-P 2.5.5(특수 계정 및 권한 관리) - {msg}"}]
     )
 
 if __name__ == "__main__":
