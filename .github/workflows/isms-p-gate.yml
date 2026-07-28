@@ -58,7 +58,7 @@ jobs:
             --exit-code 0
 
       # =====================================================================
-      # /강서윤 담당 — 2.5.1 / 2.6.3 / 2.7.2 / 2.8.2 / 2.8.5 / 2.8.6 / 2.9.1
+      # /강서윤 담당 — 2.5.1 / 2.6.3 / 2.7.2 / 2.8.2 / 2.8.5 / 2.8.6 / 2.9.1 (완료)
       # scanners/seoyun_pipeline/check_*.py
       # =====================================================================
       - name: "[강서윤] seoyun_pipeline 점검 실행"
@@ -78,10 +78,8 @@ jobs:
           done
 
       # =====================================================================
-      # /혜민 담당 — 2.8.4 등
+      # /혜민 담당 — 2.7.1 / 2.8.4 (완료)
       # scanners/hyemin_scanner/check_*.py
-      # 참고: 현재 폴더에 check_*.py 네이밍이 아직 안 맞으면(예: 2_8_4_code.py)
-      #       이 스텝에서 실행되지 않으니 check_2_8_4.py 형태로 맞춰주세요.
       # =====================================================================
       - name: "[혜민] hyemin_scanner 점검 실행"
         env:
@@ -105,7 +103,7 @@ jobs:
           done
 
       # =====================================================================
-      # /민지 담당 — 2.2.5 / 2.5.2 / 2.5.3 등 (IAM)
+      # /민지 담당 — 2.2.5 / 2.5.2 / 2.5.3 / 2.5.4 / 2.5.5 / 2.5.6 (IAM, 완료)
       # scanners/minji_iam/check_*.py
       # =====================================================================
       - name: "[민지] minji_iam 점검 실행"
@@ -120,12 +118,14 @@ jobs:
           done
 
       # =====================================================================
-      # /예원 담당 — Infra
+      # /예원 담당 — 2.6.1 / 2.6.2 / 2.6.4 / 2.6.6 / 2.6.7 / 2.8.3 / 2.10.1 / 2.10.2 (Infra, 완료)
       # scanners/yewon_infra/check_*.py
+      # 2.6.1(hcl2 파싱), 2.10.2(checkov)는 scanners/terraform/test.tf 샘플을 대상으로 함
       # =====================================================================
       - name: "[예원] yewon_infra 점검 실행"
         env:
           GITHUB_TOKEN: ${{ env.ISMS_TOKEN }}
+          TF_DIR: scanners/terraform
         run: |
           shopt -s nullglob
           for f in scanners/yewon_infra/check_*.py; do
@@ -135,7 +135,7 @@ jobs:
           done
 
       # =====================================================================
-      # /정은 담당 — Ops
+      # /정은 담당 — 2.9.2 / 2.9.3 / 2.9.4 / 2.9.5 / 2.9.6 / 2.10.9 (Ops, 완료)
       # scanners/jeongeun_ops/check_*.py
       # =====================================================================
       - name: "[정은] jeongeun_ops 점검 실행"
@@ -160,17 +160,15 @@ jobs:
           path: results/
 
       # =====================================================================
-      # /담당자 TBD — 결과 집계 (results/{control_id}/*.json -> summary)
-      # scripts/aggregate_results.py 아직 없음. 파일이 생기기 전까지는
-      # 이 스텝을 주석 해제하지 마세요.
+      # 결과 집계 (results/{control_id}/*.json -> summary)
+      # scripts/aggregate_results.py는 존재하지만 현재 IndentationError로 실행 불가.
+      # 스크립트 수정 전까지는 이 스텝을 주석 해제하지 마세요.
       # =====================================================================
-      # - name: "[담당자 TBD] Aggregate results"
+      # - name: "Aggregate results"
       #   run: python scripts/aggregate_results.py
 
       # =====================================================================
-      # /혜민 담당 — PR 코멘트 (results/summary.md를 읽어 PR에 upsert 코멘트)
-      # scripts/post_pr_comment.py를 혜민님이 작성 예정. 파일이 생기기 전까지는
-      # 이 스텝을 주석 해제하지 마세요.
+      # /혜민 담당 — PR 코멘트 (results/ 아래 각 점검 결과를 모아 PR에 upsert 코멘트)
       # =====================================================================
       - name: "[혜민] Post PR comment"
         if: github.event_name == 'pull_request'
@@ -179,11 +177,17 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scripts/post_pr_comment.py
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run ISMS-P remediation comment generation
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-2.0-flash   # 선택, 없으면 코드 기본값 사용
-        run: python lib/remediation.py
+      # =====================================================================
+      # 참고용 보관 — 위 "[혜민] Post PR comment" 스텝이 lib/remediation.py의
+      # generate_comments()를 이미 내부에서 호출하므로 평소엔 필요 없음(중복 실행 +
+      # Gemini 이중 호출 + 실패 시 잡 전체 실패 위험). remediation.py만 별도로
+      # 단독 실행해서 결과를 확인해야 할 때만 주석 해제해서 쓸 것.
+      # =====================================================================
+      # - name: Install dependencies
+      #   run: pip install -r requirements.txt
+      #
+      # - name: Run ISMS-P remediation comment generation
+      #   env:
+      #     GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      #     GEMINI_MODEL: gemini-2.0-flash   # 선택, 없으면 코드 기본값 사용
+      #   run: python lib/remediation.py
