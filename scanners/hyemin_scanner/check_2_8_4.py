@@ -80,7 +80,7 @@ execution_error = None
 try:
     with INPUT_FILE.open(
         mode="r",
-        encoding="cp949",
+        encoding="utf-8-sig",   # UTF-8로 저장된 파일 대응 (BOM 있어도 안전)
         newline=""
     ) as file:
         reader = csv.DictReader(file)
