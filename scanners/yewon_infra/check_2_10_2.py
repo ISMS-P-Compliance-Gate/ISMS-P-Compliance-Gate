@@ -30,14 +30,21 @@ def run_checkov(tf_dir: str):
 def parse_checkov(path: str) -> list[dict]:
     with open(path) as f:
         raw = json.load(f)
+
+    # Checkov 버전에 따라 결과가 딕셔너리 하나로 오거나(단일 프레임워크 스캔),
+    # 여러 개의 딕셔너리가 담긴 리스트로 올 수 있다(여러 프레임워크 스캔).
+    # 둘 다 안전하게 처리할 수 있게 항상 리스트로 통일한다.
+    results_list = raw if isinstance(raw, list) else [raw]
+
     findings = []
-    for check in raw.get("results", {}).get("failed_checks", []):
-        findings.append({
-            "file": check.get("file_path"),
-            "line": check.get("file_line_range", [None])[0],
-            "message": check.get("check_name"),
-            "severity": classify_from_external_tool(check.get("severity")),
-        })
+    for result in results_list:
+        for check in result.get("results", {}).get("failed_checks", []):
+            findings.append({
+                "file": check.get("file_path"),
+                "line": check.get("file_line_range", [None])[0],
+                "message": check.get("check_name"),
+                "severity": classify_from_external_tool(check.get("severity")),
+            })
     return findings
 
 
