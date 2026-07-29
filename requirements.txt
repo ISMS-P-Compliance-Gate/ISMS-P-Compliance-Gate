@@ -11,3 +11,7 @@ PyYAML>=6.0
 requests>=2.31.0
 psutil
 pyyaml
+
+boto3
+python-hcl2
+checkov
