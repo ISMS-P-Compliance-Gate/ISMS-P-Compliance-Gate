@@ -1,45 +1,32 @@
 import os
 import json
-import requests
 from lib.mapping import to_isms_result
 
-def check_2_2_5(org_name="", github_token=""):
-    """
-    2.2.5 퇴직 및 직무변경 관리 (GitHub API / AD / Okta)
-    """
-    headers = {
-        "Authorization": f"token {github_token}",
-        "Accept": "application/vnd.github+json"
+def check_2_2_5():
+    # 복잡한 API 호출이나 에러가 날 수 있는 로직은 모두 제거합니다.
+    findings = {
+        "message": "ISMS-P 2.2.5(퇴직 및 직무변경 관리) - 본 항목은 담당자가 GitHub/IAM 권한 목록을 직접 확인하여 점검하는 수동 체크리스트 대상입니다.",
+        "checklist": [
+            "[ ] 퇴직자 및 직무 변경자의 계정이 즉시 권한 해제/삭제 되었는가?",
+            "[ ] 공용 계정 및 dangling 권한이 존재하지 않는가?"
+        ]
     }
-    url = f"https://api.github.com/orgs/{org_name}/audit-log?phrase=action:org.remove_member"
     
-    try:
-        if github_token and org_name:
-            response = requests.get(url, headers=headers, timeout=10)
-            has_dangling_permissions = False  # 점검 로직 결과
-            status = "FAIL" if has_dangling_permissions else "PASS"
-            msg = "조직 제거 후 잔여 권한 존재 여부에 대한 점검 완료"
-        else:
-            status = "PASS"
-            msg = "기본 점검 통과 (GitHub API 설정 정보 없음 - 수동 확인 필요)"
-    except Exception as e:
-        status = "FAIL"
-        msg = f"GitHub API 호출 중 오류 발생: {str(e)}"
-
-    return to_isms_result(
-        item_code="2.2.5",
-        status=status,
-        owner="민지",
-        findings={"message": f"ISMS-P 2.2.5(퇴직 및 직무변경 관리) - {msg}"}
+    result = to_isms_result(
+        control_id="2.2.5",
+        control_name="퇴직 및 직무변경 관리",
+        status="MANUAL",  # 프로젝트 공통 포맷에 따라 "MANUAL" 또는 "CHECKLIST" 등으로 지정
+        method="manual",
+        tool="N/A",
+        findings=findings,
+        evidence_path="results/2_2_5/result.json"
     )
+    return result
 
 if __name__ == "__main__":
-    TOKEN = os.getenv("GITHUB_TOKEN", "")
-    ORG = os.getenv("GITHUB_ORG", "")
-    
-    res = check_2_2_5(ORG, TOKEN)
+    res = check_2_2_5()
     
     os.makedirs("results/2_2_5", exist_ok=True)
     with open("results/2_2_5/result.json", "w", encoding="utf-8") as f:
         json.dump(res, f, ensure_ascii=False, indent=2)
-    print("✅ 2.2.5 점검 완료 및 저장 성공")
+    print("✅ 2.2.5 수동 체크리스트 결과 생성 완료")
