@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ISMS-P Result Schema",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string" },
+    "control_id": { "type": "string" },
+    "control_name": { "type": "string" },
+    "status": { "type": "string", "enum": ["PASS", "FAIL", "CHECKLIST"] },
+    "method": { "type": "string", "enum": ["auto", "semi-auto", "checklist"] },
+    "tool": { "type": "string" },
+    "timestamp": { "type": "string" },
+    "findings": {
+      "type": "object",
+      "properties": {
+        "file": { "type": "string" },
+        "line": { "type": "integer" },
+        "message": { "type": "string" },
+        "severity": { "type": "string" }
+      }
+    },
+    "evidence_path": { "type": "string" }
+  },
+  "required": ["schema_version", "control_id", "control_name", "status", "method", "tool", "timestamp", "evidence_path"]
+}
