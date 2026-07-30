@@ -88,8 +88,6 @@ python lib/validate.py
 - `scripts/aggregate_results.py` 실행 스텝은 워크플로우에서 아직 주석 처리됨
 - `templates/remediation.yaml`은 일부 통제항목만 채워진 상태
 
-## 라이선스
-
 ## 파일 구조 및 목적
 .github/workflows/isms-p-gate.yml   # PR 트리거 파이프라인 (5명이 파트별로 담당)
 lib/
@@ -111,5 +109,5 @@ templates/remediation.yaml   # 통제항목별 고정 조치 가이드 문구
 terraform/test.tf, config/sshd_config   # 스캐너 테스트용 더미 대상 파일
 requirements.txt
 
-
+## 라이선스
 TBD
