@@ -111,6 +111,9 @@ jobs:
       - name: "[민지] minji_iam 점검 실행"
         env:
           GITHUB_TOKEN: ${{ env.ISMS_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          AWS_DEFAULT_REGION: ap-northeast-2
         run: |
           shopt -s nullglob
           for f in scanners/minji_iam/check_*.py; do
