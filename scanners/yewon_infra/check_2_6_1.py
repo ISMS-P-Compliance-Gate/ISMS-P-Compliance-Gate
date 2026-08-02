@@ -6,8 +6,6 @@
 # [실행 방법]
 # python (혹은 python3) scanners/yewon_infra/check_2_6_1.py
 # cat results/2_6_1/*.json (Windows는 해당 명령어 치거나 또는 그냥 탐색기에서 파일 열면 됨)
-# (주의) 만약 findings가 2건(HIGH 1건, MEDIUM 1건) 나오면? -> 예측 안 맞은 것.
-# 예측이 맞지 않을 경우, 더미 파일 내용이나 코드 재확인 필요.
 
 import hcl2
 import sys

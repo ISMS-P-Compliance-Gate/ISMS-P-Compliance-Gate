@@ -7,15 +7,15 @@ from lib.mapping import to_isms_result
 if __name__ == "__main__":
     to_isms_result(
         run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),
-        control_id="2.5.6",
-        control_name="접근권한 검토",
+        control_id="2.5.5",
+        control_name="특수 계정 및 권한 관리",
         category="checklist",
         status="MANUAL_REQUIRED",
         tool="manual",
         owner="민지",
         checklist_items=[
-            "반기/연 1회 이상 전체 사용자 및 관리자 접근권한 재검토를 수행하고 있습니까?",
-            "권한 오남용 또는 불필요한 권한 회수 결과 보고서가 존재합니까?",
+            "Root/Administrator 등 특수 계정 사용 시 사전 승인 절차를 거치고 있습니까?",
+            "특수 계정 작업 이력(Audit Log)이 별도로 기록 및 보관되고 있습니까?",
         ],
     )
-    print("✅ 2.5.6 수동 체크리스트 결과 생성 완료")
+    print("✅ 2.5.5 수동 체크리스트 결과 생성 완료")

@@ -1,29 +1,24 @@
+import sys
 import os
-import json
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # 누락: 이게 없어서 ModuleNotFoundError
 from lib.mapping import to_isms_result
 
-def check_2_5_2():
-    findings = {
-        "message": "ISMS-P 2.5.2(사용자 계정 관리) - 본 항목은 계정 등록, 신청, 승인 프로세스 및 휴면 계정 관리를 수동으로 점검하는 항목입니다.",
-        "checklist": [
-            "[ ] 사용자 계정 등록/발급 시 정식 승인 절차를 거쳤는가?",
-            "[ ] 장기 미사용 계정(휴면 계정)에 대한 주기적인 복구/잠금/삭제 조치가 이루어지는가?"
-        ]
-    }
-    
-    return to_isms_result(
+if __name__ == "__main__":
+    to_isms_result(
+        run_id=os.environ.get("GITHUB_RUN_ID", "local-test"),  # 누락: 필수 파라미터
         control_id="2.5.2",
         control_name="사용자 계정 관리",
-        status="MANUAL",
-        method="manual",
-        tool="N/A",
-        findings=findings,
-        evidence_path="results/2_5_2/result.json"
+        category="checklist",       # method="manual" → category로 이름 변경
+        status="MANUAL_REQUIRED",   # "MANUAL" → enum에 없는 값
+        tool="manual",              # "N/A" → 팀 표기 통일
+        owner="민지",                # 누락: 필수 파라미터
+        checklist_items=[           # findings(dict) → checklist_items(list)
+            "사용자 계정 등록/발급 시 정식 승인 절차를 거쳤습니까?",
+            "장기 미사용 계정(휴면 계정)에 대한 주기적인 복구/잠금/삭제 조치가 이루어지고 있습니까?",
+        ],
+        # evidence_path 삭제: to_isms_result()가 자동 생성/저장
     )
-
-if __name__ == "__main__":
-    res = check_2_5_2()
-    os.makedirs("results/2_5_2", exist_ok=True)
-    with open("results/2_5_2/result.json", "w", encoding="utf-8") as f:
-        json.dump(res, f, ensure_ascii=False, indent=2)
     print("✅ 2.5.2 수동 체크리스트 결과 생성 완료")
+
+# 하단 os.makedirs / open / json.dump 블록 전체 삭제 (to_isms_result()와 중복)
