@@ -4,8 +4,11 @@
 각 check_*.py는 ISMSRule을 상속해서 check() 메서드에 "무엇을 점검할지"만
 구현하면 된다. run_id/commit_sha/pr_number를 읽어오는 것, 예외를 ERROR
 결과로 바꿔주는 것, lib.mapping.to_isms_result()에 맞는 dict를 만들어
-저장하는 것은 여기서 한 번만 처리한다.
+저장하는 것은 여기서 한 번만 처리한다..
 """
+#11
+
+
 import os
 import sys
 import time
