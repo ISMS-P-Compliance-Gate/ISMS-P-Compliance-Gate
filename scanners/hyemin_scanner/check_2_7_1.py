@@ -25,6 +25,11 @@ testssl.sh 를 이용해 지정한 대상(도메인:포트)의
   scanners/hyemin_scanner/check_*.py 패턴으로 인자 없이 `python "$f"` 형태로 실행됨.
   --target을 안 줘도 TLS_SCAN_TARGET 환경변수 -> 그것도 없으면 데모 기본값(expired.badssl.com:443)으로 동작.
   run_id / pr_number / commit_sha 는 GITHUB_RUN_ID, PR_NUMBER, GITHUB_SHA 환경변수에서 자동으로 채워짐.
+
+종료 코드:
+  통제 FAIL은 정상적인 점검 결과이므로 스크립트는 항상 exit(0)으로 종료한다.
+  PASS/FAIL/ERROR 판정은 결과 JSON의 status 필드로만 전달하고,
+  워크플로우 전체를 막을지는 결과를 취합하는 별도 gate 단계에서 결정한다.
 """
 
 import argparse
@@ -364,16 +369,30 @@ def main():
     evidence_path = evidence_dir / f"testssl_{safe_target_name}_{run_id}.json"
 
     # 1) testssl.sh 실행 -> 원본(raw) 증적 JSON 저장
-    run_testssl(testssl_path, target, evidence_path)
-    raw_findings = load_raw_findings(evidence_path)
+    #    통제 FAIL은 정상적인 점검 결과이지만, testssl.sh 실행/파싱 자체가
+    #    깨지는 것은 진짜 스크립트 오류이므로 둘을 분리해서 처리한다.
+    execution_error = None
+    findings = []
 
-    # 2) 세 가지 세부 항목 판정 -> findings 배열로 변환
-    findings = [
-        check_protocols(raw_findings),
-        check_ciphers(raw_findings),
-        check_certificate(raw_findings),
-    ]
-    overall_status = "PASS" if all(f["status"] == "PASS" for f in findings) else "FAIL"
+    try:
+        run_testssl(testssl_path, target, evidence_path)
+        raw_findings = load_raw_findings(evidence_path)
+
+        # 2) 세 가지 세부 항목 판정 -> findings 배열로 변환
+        findings = [
+            check_protocols(raw_findings),
+            check_ciphers(raw_findings),
+            check_certificate(raw_findings),
+        ]
+    except Exception as error:
+        execution_error = str(error)
+
+    if execution_error:
+        overall_status = "ERROR"
+    elif all(f["status"] == "PASS" for f in findings):
+        overall_status = "PASS"
+    else:
+        overall_status = "FAIL"
 
     # --------------------------------------------------
     # 공통 스키마 결과 생성 (다른 항목들과 동일한 구조)
@@ -393,6 +412,7 @@ def main():
         "scope": target,
         "findings": findings,
         "evidence_path": str(evidence_path),
+        "execution_error": execution_error,
     }
 
     # --------------------------------------------------
@@ -410,8 +430,10 @@ def main():
     print(f"\n[*] 결과 저장됨: {output_file}")
     print(f"[*] 원본 증적 저장됨: {evidence_path}")
 
-    # CI에서 실패 시 파이프라인 fail 처리하고 싶으면 exit code 활용
-    sys.exit(0 if overall_status == "PASS" else 1)
+    # 통제 FAIL은 정상적인 점검 결과이므로 스크립트는 항상 정상 종료한다.
+    # PASS/FAIL/ERROR 판정은 result_data['status']로만 전달하고,
+    # 워크플로우 전체를 막을지는 결과를 취합하는 별도 gate 단계에서 결정한다.
+    sys.exit(0)
 
 
 if __name__ == "__main__":
