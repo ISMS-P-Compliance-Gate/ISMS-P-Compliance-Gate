@@ -54,6 +54,19 @@ input_relative_path = INPUT_FILE.relative_to(REPO_ROOT).as_posix()
 
 
 # --------------------------------------------------
+# 로그 마스킹 유틸
+# --------------------------------------------------
+
+def mask_pii(text: str) -> str:
+    """콘솔 출력용 마스킹: 앞 2자리 + **** + 뒤 2자리만 노출"""
+    if not text:
+        return text
+    if len(text) <= 4:
+        return "*" * len(text)
+    return f"{text[:2]}{'*' * (len(text) - 4)}{text[-2:]}"
+
+
+# --------------------------------------------------
 # Presidio 설정
 # --------------------------------------------------
 
@@ -96,7 +109,8 @@ try:
             for column_name, value in row.items():
                 text = value or ""
 
-                print(f"  {column_name}: {text!r}")
+                # 원문 대신 마스킹된 값만 콘솔에 출력
+                print(f"  {column_name}: {mask_pii(text)!r}")
 
                 results = analyzer.analyze(
                     text=text,
@@ -119,11 +133,17 @@ try:
 
                     detected_value = text[result.start:result.end]
 
+                    # 원문 대신 마스킹된 값만 콘솔에 출력
                     print(
-                        f"  → 탐지됨: {detected_value} "
+                        f"  → 탐지됨: {mask_pii(detected_value)} "
                         f"/ 유형: {result.entity_type} "
                         f"/ 점수: {result.score:.2f}"
                     )
+
+                    # GitHub Actions 로그 이중 마스킹
+                    # (탐지 즉시 등록해야 이후 로그에서 자동으로 가려짐)
+                    if os.getenv("GITHUB_ACTIONS") == "true":
+                        print(f"::add-mask::{detected_value}")
 
                     # 실제 전화번호 값은 결과 JSON에 저장하지 않음
                     findings.append({
@@ -202,6 +222,7 @@ with OUTPUT_FILE.open(
 
 
 # 터미널 출력
+# (result_data의 findings에는 원문 전화번호가 없으므로 그대로 출력해도 안전)
 print("\n==============================")
 print("ISMS-P 2.8.4 점검 결과")
 print("==============================")
