@@ -1,4 +1,4 @@
-# ISMS-P-Compliance-Gate (임시)
+# ISMS-P-Compliance-Gate 
 
 PR마다 ISMS-P(정보보호 및 개인정보보호 관리체계) 통제항목을 자동으로 점검하고,
 결과를 표준 JSON으로 남긴 뒤 LLM이 조치 코멘트를 달아주는 GitHub Actions 기반
